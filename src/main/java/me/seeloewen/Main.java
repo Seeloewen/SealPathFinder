@@ -29,6 +29,6 @@ public class Main
             wnd.setVisible(true);
         }
 
-        PathFinder.findPath(new Vector2f(STARTX, STARTY), RADIUS, true);
+        PathFinder.findPath(new Vector2f(STARTX, STARTY), RADIUS);
     }
 }

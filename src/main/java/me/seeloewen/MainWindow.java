@@ -61,10 +61,7 @@ public class MainWindow extends JFrame
     public NodeDisplay getNode(int x, int y)
     {
         //Create nodes for the pathfinder
-        if(x < originX || y < originY || x >= originX + gridWidth || y >= originY + gridHeight)
-        {
-            return null; //Check if the coords are even in the allowed area (this took me 2 hours of debugging to figure out)
-        }
+        if(x < originX || y < originY || x >= originX + gridWidth || y >= originY + gridHeight) return null;
 
         //Create nodes for the pathfinder
         int i = (x - originX) + (y - originY) * gridWidth;
