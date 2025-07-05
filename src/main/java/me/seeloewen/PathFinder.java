@@ -9,6 +9,14 @@ import java.util.PriorityQueue;
 
 public class PathFinder
 {
+    enum DiagonalDir
+    {
+        TopRight,
+        BottomRight,
+        TopLeft,
+        BottomLeft
+    }
+
     public static int gridWidth;
     public static int gridHeight;
 
@@ -21,17 +29,17 @@ public class PathFinder
     private static PriorityQueue<Node> openQueue = new PriorityQueue<>();
     private static HashSet<Node> openSet = new HashSet<>(); //Used for running .contains on the open nodes, faster than the queue
     private static HashSet<Node> closedSet = new HashSet<>();
-    private static Node target = new Node(-5, 30);
+    private static Node target = new Node(-70, 65);
     private static Vector2i currentPos;
 
     public static void findPath(Vector2f currentPos, int radius, boolean cull)
     {
-        PathFinder.currentPos = new Vector2i((int)Math.floor(currentPos.x), (int)Math.floor(currentPos.y));
-        gridWidth = Math.abs(radius) * 2;
-        gridHeight = Math.abs(radius) * 2;
+        PathFinder.currentPos = new Vector2i((int) Math.floor(currentPos.x), (int) Math.floor(currentPos.y));
+        gridWidth = Math.abs(radius) * 2 + 1;
+        gridHeight = Math.abs(radius) * 2 + 1;
         originX = PathFinder.currentPos.x - Math.abs(radius);
         originY = PathFinder.currentPos.y - Math.abs(radius);
-        nodes = new Node[gridHeight * gridWidth + 1];
+        nodes = new Node[gridHeight * gridWidth];
         createNodes(true);
 
         long startTime = System.nanoTime();
@@ -94,7 +102,7 @@ public class PathFinder
                 Node n = new Node(x, y);
 
                 //Replace with actual implementation for the specific cases
-                if (Main.perlin.GetNoise(x, y) > 0.3) n.state = NodeState.OCCUPIED;
+                if (Main.perlin.GetNoise(x, y) > 0.1) n.state = NodeState.OCCUPIED;
 
                 if (Main.ENABLEUI) Main.wnd.update(x, y, n.state);
 
@@ -105,18 +113,22 @@ public class PathFinder
 
     public static void expandNode(Node currentNode)
     {
-        Node[] neighbours = new Node[4];
+        Node[] neighbours = new Node[8];
         neighbours[0] = getNode(currentNode.x - 1, currentNode.y); //left
         neighbours[1] = getNode(currentNode.x + 1, currentNode.y); //right
         neighbours[2] = getNode(currentNode.x, currentNode.y + 1); //above
         neighbours[3] = getNode(currentNode.x, currentNode.y - 1); //below
+        neighbours[4] = nodeDiagonallyReachable(neighbours, getNode(currentNode.x + 1, currentNode.y + 1), DiagonalDir.TopRight); //top right
+        neighbours[5] = nodeDiagonallyReachable(neighbours, getNode(currentNode.x - 1, currentNode.y + 1), DiagonalDir.TopLeft); //top left
+        neighbours[6] = nodeDiagonallyReachable(neighbours, getNode(currentNode.x + 1, currentNode.y - 1), DiagonalDir.BottomRight); //bottom right
+        neighbours[7] = nodeDiagonallyReachable(neighbours, getNode(currentNode.x - 1, currentNode.y - 1), DiagonalDir.BottomLeft); //bottom left
 
         //Check all neighbours and add them to the open list or update the optimal path to them
         for (Node neighbour : neighbours)
         {
             if (neighbour == null || neighbour.state == NodeState.OCCUPIED || closedSet.contains(neighbour)) continue;
 
-            int g = currentNode.g + 1; //Calculate the length on this path to the neighbour
+            double g = getDistance(neighbour, currentNode); //Calculate the length on this path to the neighbour
 
             //If the neighbour is already on list but this path to it is not better, continue to the next neighbour
             if (openSet.contains(neighbour) && g >= neighbour.g) continue;
@@ -142,10 +154,24 @@ public class PathFinder
         }
     }
 
+    public static Node nodeDiagonallyReachable(Node[] neighbours, Node n, DiagonalDir dir)
+    {
+        if(n == null) return null;
+
+        //Evaluate whether the two nodes that could block diagonal movement to the specified dir actually do block it. If so, return null
+        //to skip the check of the node later on entirely
+        return switch (dir)
+        {
+            case TopRight -> neighbours[1].state == NodeState.FREE && neighbours[2].state == NodeState.FREE ? n : null;
+            case TopLeft -> neighbours[0].state == NodeState.FREE && neighbours[2].state == NodeState.FREE ? n : null;
+            case BottomRight ->  neighbours[1].state == NodeState.FREE && neighbours[3].state == NodeState.FREE ? n : null;
+            case BottomLeft -> neighbours[0].state == NodeState.FREE && neighbours[3].state == NodeState.FREE ? n : null;
+        };
+    }
+
     public static double getDistance(Node n1, Node n2)
     {
-        //return Math.sqrt(Math.pow((n2.y - n1.y), 2) + Math.pow((n2.x - n1.x), 2)); //tactical pythagoras
-        return Math.abs(n2.x - n1.x) + Math.abs(n2.y - n1.y); //Manhattan distance
+        return Math.sqrt(Math.pow((n2.y - n1.y), 2) + Math.pow((n2.x - n1.x), 2)); //tactical pythagoras
     }
 
     public static void addOpenNode(Node n)
@@ -165,7 +191,12 @@ public class PathFinder
     public static Node getNode(int x, int y)
     {
         //Create nodes for the pathfinder
-        int i = (x -originX) + (y -originY) * gridWidth;
+        if(x < originX || y < originY || x >= originX + gridWidth || y >= originY + gridHeight)
+        {
+            return null; //Check if the coords are even in the allowed area (this took me 2 hours of debugging to figure out)
+        }
+
+        int i = (x - originX) + (y - originY) * gridWidth;
 
         if (i < 0 || i >= nodes.length) return null;
         return nodes[i];

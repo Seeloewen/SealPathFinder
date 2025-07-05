@@ -22,8 +22,8 @@ public class MainWindow extends JFrame
 
         currentPos = new Vector2i((int)Math.floor(startPosition.x), (int)Math.floor(startPosition.y));
 
-        gridHeight = Math.abs(radius) * 2;
-        gridWidth = Math.abs(radius) * 2;
+        gridHeight = Math.abs(radius) * 2 + 1;
+        gridWidth = Math.abs(radius) * 2 + 1;
         originX = currentPos.x - Math.abs(radius);
         originY = currentPos.y - Math.abs(radius);
 
@@ -32,7 +32,7 @@ public class MainWindow extends JFrame
         setResizable(false);
         setLayout(null);
 
-        nodes = new NodeDisplay[gridWidth * gridHeight + 1];
+        nodes = new NodeDisplay[(gridHeight + 1) * (gridWidth + 1)];
 
         for (int dx = 0; dx < gridWidth; dx++)
         {
@@ -60,6 +60,12 @@ public class MainWindow extends JFrame
 
     public NodeDisplay getNode(int x, int y)
     {
+        //Create nodes for the pathfinder
+        if(x < originX || y < originY || x >= originX + gridWidth || y >= originY + gridHeight)
+        {
+            return null; //Check if the coords are even in the allowed area (this took me 2 hours of debugging to figure out)
+        }
+
         //Create nodes for the pathfinder
         int i = (x - originX) + (y - originY) * gridWidth;
 

@@ -6,10 +6,10 @@ import java.time.LocalTime;
 
 public class Main
 {
-    public static final int RADIUS = 100;
+    public static final int RADIUS = 75;
     public static final boolean ENABLEUI = true;
-    public static final int STARTX = 70;
-    public static final int STARTY = -50;
+    public static final int STARTX = 0;
+    public static final int STARTY = 0;
 
     public static MainWindow wnd;
 

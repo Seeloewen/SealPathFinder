@@ -8,17 +8,8 @@ public class Node implements Comparable<Node>
     public int gridWidth;
     public final int x;
     public final int y;
-    public int g = 0;
+    public double g = 0;
     public double f = 0;
-
-    public Node(int x, int y, int g, int f, int gridWidth)
-    {
-        this.x = x;
-        this.y = y;
-        this.g = g;
-        this.f = f;
-        this.gridWidth = gridWidth;
-    }
 
     public Node(int x, int y)
     {
