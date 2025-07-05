@@ -167,7 +167,7 @@ public class PathFinder
         //Create nodes for the pathfinder
         int i = (x -originX) + (y -originY) * gridWidth;
 
-        if (i < 0 || i > nodes.length) return null;
+        if (i < 0 || i >= nodes.length) return null;
         return nodes[i];
     }
 }
